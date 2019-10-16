@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/jonyhy96/replacer/pkg/replacer"
 	"github.com/jonyhy96/replacer/pkg/utils/file"
@@ -24,30 +25,42 @@ func init() {
 var (
 	fileType        = ""
 	defaultFileType = "json"
+	_replaceMap     map[string]interface{}
+	err             error
 	rootCmd         = &cobra.Command{
 		Use:     "replacer",
 		Short:   "replacer eplace things for you\n",
 		Version: "1.0.0",
 		Run: func(cmd *cobra.Command, args []string) {
-			filePath, _ := cmd.Flags().GetString("file")
+			replaceFilePath, _ := cmd.Flags().GetString("file")
 			workPath, _ := cmd.Flags().GetString("work")
+			if fileType == "" {
+				_replaceMap, err = file.New(defaultFileType).Transform(replaceFilePath)
+				if err != nil {
+					log.Fatalln(err)
+				}
+			}
 			filepath.Walk(workPath, func(path string, info os.FileInfo, err error) error {
 				if info.IsDir() {
 					return nil
 				}
-				if fileType == "" {
-					replaceMap, err := file.New(defaultFileType).Transform(filePath)
-					if err != nil {
-						log.Fatalln(err)
-					}
-					file, _ := os.OpenFile(filePath, os.O_RDWR, 0644) // omite error because of already under walk.
-					err = replacer.New(defaultFileType, replaceMap).Replace(file, file)
-					if err != nil {
-						log.Fatalln(err)
-					}
+				if strings.Contains(path, ".git") {
+					return nil
 				}
+				if strings.Contains(replaceFilePath, info.Name()) {
+					return nil
+				}
+				go func() {
+					in, _ := os.Open(path) // omite error because of already under walk.
+					defer in.Close()
+					err = replacer.New(defaultFileType, _replaceMap, path).Replace(in)
+					if err != nil {
+						log.Fatalln(err)
+					}
+				}()
 				return nil
 			})
+			log.Printf("Success replace all files under %s by %s!\n", workPath, replaceFilePath)
 		},
 	}
 )

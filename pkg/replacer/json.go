@@ -16,11 +16,12 @@ var (
 
 // JSON handles json format replace file.
 type JSON struct {
-	replace map[string]interface{}
+	FileName string
+	replace  map[string]interface{}
 }
 
 // Replace replace all matched string of in by replace.key and write to out.
-func (j *JSON) Replace(in io.Reader, out io.Writer) error {
+func (j *JSON) Replace(in io.Reader) error {
 	inBytes, err := ioutil.ReadAll(in)
 	result := string(inBytes)
 	if err != nil {
@@ -29,9 +30,9 @@ func (j *JSON) Replace(in io.Reader, out io.Writer) error {
 	for key, value := range j.replace {
 		result = strings.ReplaceAll(result, key, interface2string(value))
 	}
-	_, err = out.Write([]byte(result))
+	err = ioutil.WriteFile(j.FileName, []byte(result), 0644)
 	if err != nil {
-		return fmt.Errorf("write to out %w", err)
+		return fmt.Errorf("ioutil.WriteFile %w", err)
 	}
 	return nil
 }
