@@ -32,7 +32,8 @@ $ sudo mv replacer /usr/local/bin
 | param | required | e.g. |
 | :--------: | :-----: | :----: |
 | f     | true | -f ./keys.json |
-| w     | true | -w .                       |
+| w     | true | -w .           |
+| e     | false| -e go.mod,go.sum |
 
 ### Coding style
 
