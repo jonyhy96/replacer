@@ -18,7 +18,7 @@ func init() {
 	rootCmd.Flags().StringP("work", "w", "", "the work path of files you want to replace")
 	rootCmd.Flags().StringVar(&fileType, "t", "", "the type of your replace file(default is json)")
 	rootCmd.MarkFlagRequired("file")
-	rootCmd.MarkFlagRequired("path")
+	rootCmd.MarkFlagRequired("work")
 	viper.SetDefault("author", "jonyhy <github/jonyhy96>")
 }
 
