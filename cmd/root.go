@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/jonyhy96/replacer/pkg/replacer"
 	"github.com/jonyhy96/replacer/pkg/utils/file"
@@ -27,6 +28,7 @@ var (
 	defaultFileType = "json"
 	_replaceMap     map[string]interface{}
 	err             error
+	wg              = sync.WaitGroup{}
 	rootCmd         = &cobra.Command{
 		Use:     "replacer",
 		Short:   "replacer eplace things for you\n",
@@ -50,7 +52,9 @@ var (
 				if strings.Contains(replaceFilePath, info.Name()) {
 					return nil
 				}
+				wg.Add(1)
 				go func() {
+					defer wg.Done()
 					in, _ := os.Open(path) // omite error because of already under walk.
 					defer in.Close()
 					err = replacer.New(defaultFileType, _replaceMap, path).Replace(in)
@@ -60,6 +64,7 @@ var (
 				}()
 				return nil
 			})
+			wg.Wait()
 			log.Printf("Success replace all files under %s by %s!\n", workPath, replaceFilePath)
 		},
 	}
